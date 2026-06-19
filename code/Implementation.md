@@ -137,8 +137,8 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 | `[x]` | `evidence-checker.ts` | Evidence requirement matching |
 | `[x]` | `vlm-analyzer.ts` | OpenAI GPT-4o vision API calls |
 | `[x]` | `prompts.ts` | All VLM prompts + anti-injection rules |
-| `[ ]` | `risk-flagger.ts` | Risk flag merging + deterministic rules |
-| `[ ]` | `output-writer.ts` | CSV output assembly + validation |
+| `[x]` | `risk-flagger.ts` | Risk flag merging + deterministic rules |
+| `[x]` | `output-writer.ts` | CSV output assembly + validation |
 | `[ ]` | `logger.ts` | Structured logging + cost tracking |
 | `[x]` | `retry.ts` | Exponential backoff, jitter, rate-limit handling |
 
@@ -184,11 +184,11 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 - [x] Build vlm-analyzer.ts (OpenAI GPT-4o vision calls, Zod validation, post-validation)
 - [x] **Verified**: sample claim user_001 → 7/7 fields match expected (dent, rear_bumper, supported, medium, etc.)
 
-### Phase 4 — Risk Flagging & Output Assembly ⏱️ 30 min
-- [ ] Build risk-flagger.ts (merge VLM + user history risks)
-- [ ] Build output-writer.ts (CSV with exact schema)
-- [ ] Build logger.ts (structured logging + cost tracking)
-- [ ] **Verify**: output matches expected CSV format
+### Phase 4 — Risk Flagging & Output Assembly ✅ COMPLETE
+- [x] Build risk-flagger.ts (merge VLM + user history + adversarial flags, deterministic rules, sorted dedup)
+- [x] Build output-writer.ts (14-column CSV assembly, bool→string, array→semicolon, Zod validation)
+- [ ] Build logger.ts (structured logging + cost tracking) — deferred to Phase 5
+- [x] **Verified**: risk flags merge correctly (4/4 tests), CSV output has exactly 14 columns
 
 ### Phase 5 — Pipeline Integration & Sample Run ⏱️ 30 min
 - [ ] Wire all modules in index.ts
