@@ -15,6 +15,7 @@ import { config, getApiKey } from "./config.js";
 import { SYSTEM_PROMPT, buildClaimPrompt, buildImageMessages } from "./prompts.js";
 import { withRetry } from "./retry.js";
 import { getEvidenceContext } from "./evidence-checker.js";
+import { calibrateVLMResponse } from "./calibrator.js";
 
 // ─── OpenAI Client ──────────────────────────────────────────────
 
@@ -132,60 +133,8 @@ export async function analyzeClaim(
     }
   );
 
-  // Post-validate: ensure object_part is valid for the claim_object
-  return postValidate(response, claim);
-}
-
-// ─── Post-Validation ────────────────────────────────────────────
-
-/**
- * Correct any schema-valid but semantically wrong values.
- * For example, a laptop part appearing in a car claim.
- */
-function postValidate(response: VLMResponse, claim: ClaimInput): VLMResponse {
-  const result = { ...response };
-
-  // Fix object_part if it's not valid for this claim_object
-  if (!isValidObjectPart(claim.claim_object, result.object_part)) {
-    const allowedParts = getObjectPartsForType(claim.claim_object);
-    // Try to find a close match
-    const lower = result.object_part.toLowerCase().replace(/\s+/g, "_");
-    const match = allowedParts.find((p) => p === lower);
-    result.object_part = match ?? "unknown";
-  }
-
-  // Ensure risk_flags consistency
-  if (result.risk_flags.length === 0) {
-    result.risk_flags = ["none"];
-  }
-
-  // If risk_flags has "none" AND other flags, remove "none"
-  if (
-    result.risk_flags.length > 1 &&
-    result.risk_flags.includes("none")
-  ) {
-    result.risk_flags = result.risk_flags.filter((f) => f !== "none");
-  }
-
-  // If claim_mismatch or user_history_risk, ensure manual_review_required is present
-  if (
-    (result.risk_flags.includes("claim_mismatch") ||
-      result.risk_flags.includes("user_history_risk")) &&
-    !result.risk_flags.includes("manual_review_required")
-  ) {
-    result.risk_flags.push("manual_review_required");
-  }
-
-  // Ensure supporting_image_ids is empty if claim is contradicted with no support
-  if (
-    result.claim_status === "contradicted" &&
-    result.supporting_image_ids.length > 0
-  ) {
-    // This is acceptable — supporting images can show what contradicts the claim
-    // Keep as-is per the problem statement examples
-  }
-
-  return result;
+  // Post-validate: apply deterministic rules
+  return calibrateVLMResponse(response, claim);
 }
 
 // ─── Self-Test ──────────────────────────────────────────────────

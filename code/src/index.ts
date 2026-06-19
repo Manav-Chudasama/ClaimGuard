@@ -91,7 +91,7 @@ async function processSingleClaim(
 
     // 6. Merge risk flags
     const { flagString } = mergeRiskFlags(
-      vlmResult.risk_flags,
+      vlmResult,
       userHistory,
       parsed
     );

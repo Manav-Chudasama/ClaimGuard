@@ -24,16 +24,16 @@ type RiskFlag = (typeof RISK_FLAG_VALUES)[number];
  * - Remove "none" if other flags exist
  */
 export function mergeRiskFlags(
-  vlmFlags: RiskFlag[],
+  vlmResult: VLMResponse,
   userHistory: UserHistory | undefined,
   parsedClaim: ParsedClaim
 ): { flags: RiskFlag[]; flagString: string } {
   const flagSet = new Set<RiskFlag>();
 
   // 1. Add VLM-detected flags
-  for (const flag of vlmFlags) {
-    if (flag !== "none") {
-      flagSet.add(flag);
+  for (const flag of vlmResult.risk_flags) {
+    if (flag !== "none" && isValidRiskFlag(flag)) {
+      flagSet.add(flag as RiskFlag);
     }
   }
 
@@ -69,25 +69,41 @@ export function mergeRiskFlags(
     flagSet.add("text_instruction_present");
   }
 
-  // 4. Deterministic enforcement: manual_review_required
+  // 4. Deterministic rules from VLMResponse
+  if (vlmResult.claim_status === "contradicted") {
+    // If it's contradicted and there's a claimed issue but issue_type is "none"
+    if (parsedClaim.claimedDamage !== "unknown" && vlmResult.issue_type === "none") {
+      flagSet.add("damage_not_visible");
+    }
+    
+    // If it's contradicted but damage IS visible, it's a mismatch (wrong type, wrong part, wrong severity)
+    if (vlmResult.issue_type !== "none") {
+      flagSet.add("claim_mismatch");
+    }
+  }
+
+  // 5. Deterministic enforcement: manual_review_required
   if (
     flagSet.has("claim_mismatch") ||
-    flagSet.has("user_history_risk") ||
+    flagSet.has("text_instruction_present") ||
     flagSet.has("non_original_image") ||
-    flagSet.has("possible_manipulation")
+    flagSet.has("wrong_object") ||
+    flagSet.has("possible_manipulation") ||
+    (flagSet.has("damage_not_visible") && flagSet.has("user_history_risk")) ||
+    flagSet.has("user_history_risk")
   ) {
     flagSet.add("manual_review_required");
   }
 
-  // 5. If no flags, set to "none"
+  // 6. If no flags, set to "none"
   if (flagSet.size === 0) {
     return { flags: ["none"], flagString: "none" };
   }
 
-  // 6. Convert to sorted array for deterministic output
+  // 7. Convert to sorted array for deterministic output
   const flags = [...flagSet].sort() as RiskFlag[];
 
-  // 7. Format as semicolon-separated string
+  // 8. Format as semicolon-separated string
   const flagString = flags.join(";");
 
   return { flags, flagString };
