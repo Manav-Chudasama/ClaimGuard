@@ -184,9 +184,9 @@ without updating this file.
 ├── problem_statement.md              # Full task description and I/O schema
 ├── README.md                         # Readme file for the repo
 ├── code/                             # Build your solution here
-│   ├── main.py                       # Suggested terminal entry point
+│   ├── main.ts                       # Terminal entry point (Bun + TypeScript)
 │   └── evaluation/
-│       └── main.py                   # Suggested evaluation entry point
+│       └── main.ts                   # Evaluation entry point (Bun + TypeScript)
 └── dataset/
     ├── sample_claims.csv             # Inputs + expected outputs for development
     ├── claims.csv                    # Inputs only; run your system on these rows

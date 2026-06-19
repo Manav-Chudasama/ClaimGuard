@@ -1,0 +1,24 @@
+{
+  "name": "claimguard",
+  "version": "1.0.0",
+  "description": "Multi-modal evidence review system for damage claim verification",
+  "type": "module",
+  "scripts": {
+    "start": "bun run main.ts",
+    "evaluate": "bun run evaluation/main.ts",
+    "load-test": "bun run src/data-loader.ts"
+  },
+  "dependencies": {
+    "openai": "^4.86.0",
+    "csv-parse": "^5.6.0",
+    "csv-stringify": "^6.5.0",
+    "zod": "^3.24.0",
+    "sharp": "^0.33.0",
+    "p-limit": "^6.2.0",
+    "chalk": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

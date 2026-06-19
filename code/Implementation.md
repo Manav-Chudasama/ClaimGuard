@@ -119,19 +119,19 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 
 | Status | File | Purpose |
 |---|---|---|
-| `[ ]` | `package.json` | Project metadata, scripts, dependencies |
-| `[ ]` | `tsconfig.json` | TypeScript strict config |
-| `[ ]` | `.env.example` | Template for `OPENAI_API_KEY` |
-| `[ ]` | `main.ts` | Entry point (replaces main.py) |
+| `[x]` | `package.json` | Project metadata, scripts, dependencies |
+| `[x]` | `tsconfig.json` | TypeScript strict config |
+| `[x]` | `.env.example` | Template for `OPENAI_API_KEY` |
+| `[x]` | `main.ts` | Entry point (replaces main.py) |
 
 ### Source Code (`code/src/`)
 
 | Status | File | Purpose |
 |---|---|---|
-| `[ ]` | `index.ts` | Pipeline orchestrator |
-| `[ ]` | `types.ts` | Interfaces + Zod schemas |
-| `[ ]` | `config.ts` | Env vars, API config, retry settings |
-| `[ ]` | `data-loader.ts` | CSV parsers for all 3 input files |
+| `[x]` | `index.ts` | Pipeline orchestrator (stub) |
+| `[x]` | `types.ts` | Interfaces + Zod schemas |
+| `[x]` | `config.ts` | Env vars, API config, retry settings |
+| `[x]` | `data-loader.ts` | CSV parsers for all 3 input files |
 | `[ ]` | `claim-parser.ts` | Conversation → structured claim extraction |
 | `[ ]` | `image-processor.ts` | Load, resize, base64 encode images |
 | `[ ]` | `evidence-checker.ts` | Evidence requirement matching |
@@ -146,7 +146,7 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 
 | Status | File | Purpose |
 |---|---|---|
-| `[ ]` | `main.ts` | Evaluation entry point (replaces main.py) |
+| `[x]` | `main.ts` | Evaluation entry point (stub) |
 | `[ ]` | `evaluate.ts` | Run pipeline on sample, compare outputs |
 | `[ ]` | `metrics.ts` | Per-field accuracy, confusion matrices |
 | `[ ]` | `evaluation_report.md` | Generated operational analysis |
@@ -161,16 +161,16 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 
 ## Implementation Phases
 
-### Phase 1 — Scaffolding & Data Layer ⏱️ 30 min
-- [ ] Initialize Bun project (`bun init`)
-- [ ] Install dependencies
-- [ ] Create tsconfig.json
-- [ ] Create types.ts with all interfaces + Zod schemas
-- [ ] Create config.ts with env loading
-- [ ] Build data-loader.ts (parse all 3 CSVs)
-- [ ] Create .env.example
-- [ ] Replace main.py with main.ts, update AGENTS.md
-- [ ] **Verify**: all 3 CSV files load and parse correctly
+### Phase 1 — Scaffolding & Data Layer ✅ COMPLETE
+- [x] Initialize Bun project (`bun init`)
+- [x] Install dependencies (openai, csv-parse, csv-stringify, zod, sharp, p-limit, chalk)
+- [x] Create tsconfig.json (ES2022, strict, bundler resolution)
+- [x] Create types.ts with all interfaces + Zod schemas (12 types, exact enum constraints)
+- [x] Create config.ts with env loading (Bun native .env)
+- [x] Build data-loader.ts (parse all 3 CSVs — fixed mixed line endings)
+- [x] Create .env.example
+- [x] Replace main.py with main.ts, update AGENTS.md
+- [x] **Verified**: 20 sample claims, 44 test claims, 47 user histories, 11 evidence requirements
 
 ### Phase 2 — Image Processing & Claim Parsing ⏱️ 30 min
 - [ ] Build image-processor.ts (load, resize, base64)
