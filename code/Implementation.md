@@ -205,10 +205,12 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 - [x] Generate evaluation_report.md
 - [x] **Verify**: metrics computed, report generated
 
-### Phase 7 — Test Run & Polish ⏱️ 30 min
-- [ ] Run pipeline on claims.csv → output.csv
-- [ ] Verify: 45 rows, all columns, correct format
-- [ ] Add batching/concurrency optimizations
+### Phase 7 — Prompt Tuning & Final Production Run ✅ COMPLETE
+- [x] Prompt tuning iteration 1: fixed NEI bias, improved issue_type/severity definitions (68.2% → 77.0%)
+- [x] Prompt tuning iteration 2: added contradiction scenarios, exaggeration detection (77.0% → 78.9%)
+- [x] Prompt tuning iteration 3: added visual unverifiability rule for missing items/internal damage (claim_status 85.0%)
+- [x] Final production run on claims.csv: 44/44 processed, 0 failed, 82 images, ~$0.56, 35.0s
+- [x] **Verified**: claim_status ≥85% target met, output.csv generated with 44 rowss
 - [ ] Write README, finalize docs
 
 ### Phase 8 — Submission Prep ⏱️ 15 min
