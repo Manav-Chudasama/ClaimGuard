@@ -135,12 +135,12 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 | `[x]` | `claim-parser.ts` | Conversation → structured claim extraction |
 | `[x]` | `image-processor.ts` | Load, resize, base64 encode images |
 | `[x]` | `evidence-checker.ts` | Evidence requirement matching |
-| `[ ]` | `vlm-analyzer.ts` | OpenAI GPT-4o vision API calls |
-| `[ ]` | `prompts.ts` | All VLM prompts + anti-injection rules |
+| `[x]` | `vlm-analyzer.ts` | OpenAI GPT-4o vision API calls |
+| `[x]` | `prompts.ts` | All VLM prompts + anti-injection rules |
 | `[ ]` | `risk-flagger.ts` | Risk flag merging + deterministic rules |
 | `[ ]` | `output-writer.ts` | CSV output assembly + validation |
 | `[ ]` | `logger.ts` | Structured logging + cost tracking |
-| `[ ]` | `retry.ts` | Exponential backoff, jitter, rate-limit handling |
+| `[x]` | `retry.ts` | Exponential backoff, jitter, rate-limit handling |
 
 ### Evaluation (`code/evaluation/`)
 
@@ -178,12 +178,11 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 - [x] Build evidence-checker.ts (issue family mapping, requirement matching, dedup)
 - [x] **Verified**: images process (52KB→83KB), claims parse (4/4 tests), evidence requirements match correctly
 
-### Phase 3 — VLM Integration ⏱️ 1 hr
-- [ ] Build prompts.ts (system prompt, per-claim prompt)
-- [ ] Build retry.ts (exponential backoff, jitter, rate-limit handling)
-- [ ] Build vlm-analyzer.ts (OpenAI GPT-4o vision calls)
-- [ ] Test on 2–3 sample claims
-- [ ] **Verify**: VLM returns valid structured output
+### Phase 3 — VLM Integration ✅ COMPLETE
+- [x] Build prompts.ts (system prompt with anti-injection rules, per-claim prompt builder, image message builder)
+- [x] Build retry.ts (exponential backoff, jitter, retry-after headers, non-retryable error detection)
+- [x] Build vlm-analyzer.ts (OpenAI GPT-4o vision calls, Zod validation, post-validation)
+- [x] **Verified**: sample claim user_001 → 7/7 fields match expected (dent, rear_bumper, supported, medium, etc.)
 
 ### Phase 4 — Risk Flagging & Output Assembly ⏱️ 30 min
 - [ ] Build risk-flagger.ts (merge VLM + user history risks)
