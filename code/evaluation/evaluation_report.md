@@ -1,6 +1,6 @@
 # Evaluation Report
 
-**Generated**: 2026-06-19T16:14:59.614Z
+**Generated**: 2026-06-19T16:37:19.038Z
 **Claims evaluated**: 20 / 20
 **Overall weighted score**: 78.9%
 
