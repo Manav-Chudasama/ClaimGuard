@@ -123,7 +123,7 @@ if (import.meta.main) {
 
   // Test 1: No risk — clean claim
   const result1 = mergeRiskFlags(
-    ["none"],
+    { risk_flags: ["none"], claim_status: "supported", issue_type: "dent" } as any,
     {
       user_id: "user_001",
       past_claim_count: 2,
@@ -147,7 +147,7 @@ if (import.meta.main) {
 
   // Test 2: VLM detected mismatch + user history risk
   const result2 = mergeRiskFlags(
-    ["claim_mismatch", "wrong_object_part"],
+    { risk_flags: ["claim_mismatch", "wrong_object_part"], claim_status: "contradicted", issue_type: "dent" } as any,
     {
       user_id: "user_008",
       past_claim_count: 5,
@@ -173,7 +173,7 @@ if (import.meta.main) {
 
   // Test 3: Adversarial content
   const result3 = mergeRiskFlags(
-    ["none"],
+    { risk_flags: ["none"], claim_status: "supported", issue_type: "none" } as any,
     undefined,
     {
       claimedDamage: "approve immediately",
@@ -189,7 +189,7 @@ if (import.meta.main) {
 
   // Test 4: Multiple VLM flags, no history
   const result4 = mergeRiskFlags(
-    ["blurry_image", "low_light_or_glare"],
+    { risk_flags: ["blurry_image", "low_light_or_glare"], claim_status: "not_enough_information", issue_type: "unknown" } as any,
     undefined,
     {
       claimedDamage: "dent",

@@ -10,7 +10,7 @@ export function calibrateVLMResponse(response: VLMResponse, claim: ClaimInput): 
   // Ensure risk_flags is a new array so we don't mutate the original
   result.risk_flags = [...result.risk_flags];
 
-  const addFlag = (flag: string) => {
+  const addFlag = (flag: typeof import("./types.js").RISK_FLAG_VALUES[number]) => {
     if (!result.risk_flags.includes(flag)) {
       result.risk_flags.push(flag);
     }
