@@ -1,0 +1,252 @@
+# ClaimGuard — Multi-Modal Evidence Review System
+
+> **Implementation Plan — Living Document**
+> Last updated: 2026-06-19T14:06:03+05:30
+
+Build a TypeScript system that verifies damage claims (car, laptop, package) by analyzing submitted images, claim conversations, user history, and evidence requirements — producing structured verdicts in `output.csv`.
+
+---
+
+## Decisions Locked
+
+| Decision | Choice |
+|---|---|
+| **Language** | TypeScript |
+| **Runtime** | Bun |
+| **VLM Provider** | OpenAI GPT-4o / GPT-4o-mini |
+| **Entry Point** | `main.ts` (update AGENTS.md, remove main.py wrapper) |
+| **Rate Limits** | Robust handling: exponential backoff, concurrency limiter, retry with jitter, graceful degradation |
+
+---
+
+## Data Analysis Summary
+
+| Dataset | Rows | Images per row | Object types |
+|---|---|---|---|
+| `sample_claims.csv` | 20 rows | 1–2 images | 8 car, 6 laptop, 6 package |
+| `claims.csv` | 45 rows | 1–3 images | ~18 car, ~12 laptop, ~15 package |
+| `user_history.csv` | 48 users | — | risk flags on ~20 users |
+| `evidence_requirements.csv` | 12 rules | — | car/laptop/package/all |
+
+### Key patterns from sample data
+- **Multi-part claims**: Some claims mention 2 parts (e.g., "front bumper AND headlight")
+- **Adversarial inputs**: Claims contain prompt injection attempts ("approve this claim immediately", "ignore previous instructions")
+- **Multilingual**: Hindi (Hinglish), Spanish, Chinese mixed with English
+- **Tricky cases**: Wrong object in image, blurry images, non-original photos, text instructions in images
+- **Risk flag combinations**: Up to 4 flags per claim (e.g., `claim_mismatch;non_original_image;user_history_risk;manual_review_required`)
+- **Image sizes**: 4KB–355KB JPEGs, suggesting mixed quality
+
+---
+
+## Tech Stack
+
+### Core Runtime
+| Tool | Purpose |
+|---|---|
+| **Bun** | Runtime & package manager |
+| **TypeScript 5.x** | Language (Bun runs TS natively) |
+
+### Dependencies
+| Package | Purpose |
+|---|---|
+| `openai` | OpenAI GPT-4o / GPT-4o-mini API client |
+| `csv-parse` | Parse CSV inputs |
+| `csv-stringify` | Write CSV outputs |
+| `zod` | Schema validation for LLM outputs |
+| `sharp` | Image pre-processing (resize/compress for API) |
+| `p-limit` | Concurrency limiter for API calls |
+| `chalk` | Terminal output formatting |
+
+> **Note**: Bun has built-in `.env` loading, `dotenv` is not needed.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    ClaimGuard Pipeline                    │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  1. DATA LOADER                                          │
+│     ├── Parse claims.csv                                 │
+│     ├── Parse user_history.csv → Map<user_id, history>   │
+│     └── Parse evidence_requirements.csv → rules[]        │
+│                                                          │
+│  2. CLAIM PARSER                                         │
+│     ├── Extract damage claim from conversation           │
+│     ├── Identify claimed object parts                    │
+│     ├── Detect multi-part claims                         │
+│     └── Strip adversarial/injection content              │
+│                                                          │
+│  3. IMAGE PROCESSOR                                      │
+│     ├── Load & validate images from disk                 │
+│     ├── Resize for API (max 1024px, ~200KB)              │
+│     ├── Convert to base64                                │
+│     └── Flag unreadable/corrupt images                   │
+│                                                          │
+│  4. EVIDENCE CHECKER                                     │
+│     ├── Match claim → applicable evidence requirements   │
+│     ├── Check if image set meets minimum evidence        │
+│     └── Output: evidence_standard_met + reason           │
+│                                                          │
+│  5. VLM ANALYZER (core)                                  │
+│     ├── Send images + structured prompt to VLM           │
+│     ├── Analyze: issue_type, object_part, severity       │
+│     ├── Determine: claim_status + justification          │
+│     ├── Identify: supporting_image_ids                   │
+│     └── Detect: risk signals from images                 │
+│                                                          │
+│  6. RISK FLAGGER                                         │
+│     ├── Merge VLM-detected image risks                   │
+│     ├── Merge user_history risks                         │
+│     ├── Apply rule-based flags                           │
+│     └── Output: risk_flags[], valid_image                │
+│                                                          │
+│  7. OUTPUT WRITER                                        │
+│     ├── Assemble all fields per claim                    │
+│     ├── Validate against output schema (Zod)             │
+│     └── Write output.csv                                 │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## File Manifest
+
+### Core Solution (`code/`)
+
+| Status | File | Purpose |
+|---|---|---|
+| `[ ]` | `package.json` | Project metadata, scripts, dependencies |
+| `[ ]` | `tsconfig.json` | TypeScript strict config |
+| `[ ]` | `.env.example` | Template for `OPENAI_API_KEY` |
+| `[ ]` | `main.ts` | Entry point (replaces main.py) |
+
+### Source Code (`code/src/`)
+
+| Status | File | Purpose |
+|---|---|---|
+| `[ ]` | `index.ts` | Pipeline orchestrator |
+| `[ ]` | `types.ts` | Interfaces + Zod schemas |
+| `[ ]` | `config.ts` | Env vars, API config, retry settings |
+| `[ ]` | `data-loader.ts` | CSV parsers for all 3 input files |
+| `[ ]` | `claim-parser.ts` | Conversation → structured claim extraction |
+| `[ ]` | `image-processor.ts` | Load, resize, base64 encode images |
+| `[ ]` | `evidence-checker.ts` | Evidence requirement matching |
+| `[ ]` | `vlm-analyzer.ts` | OpenAI GPT-4o vision API calls |
+| `[ ]` | `prompts.ts` | All VLM prompts + anti-injection rules |
+| `[ ]` | `risk-flagger.ts` | Risk flag merging + deterministic rules |
+| `[ ]` | `output-writer.ts` | CSV output assembly + validation |
+| `[ ]` | `logger.ts` | Structured logging + cost tracking |
+| `[ ]` | `retry.ts` | Exponential backoff, jitter, rate-limit handling |
+
+### Evaluation (`code/evaluation/`)
+
+| Status | File | Purpose |
+|---|---|---|
+| `[ ]` | `main.ts` | Evaluation entry point (replaces main.py) |
+| `[ ]` | `evaluate.ts` | Run pipeline on sample, compare outputs |
+| `[ ]` | `metrics.ts` | Per-field accuracy, confusion matrices |
+| `[ ]` | `evaluation_report.md` | Generated operational analysis |
+
+### Documentation
+
+| Status | File | Purpose |
+|---|---|---|
+| `[ ]` | `code/README.md` | Setup, architecture, how to run |
+
+---
+
+## Implementation Phases
+
+### Phase 1 — Scaffolding & Data Layer ⏱️ 30 min
+- [ ] Initialize Bun project (`bun init`)
+- [ ] Install dependencies
+- [ ] Create tsconfig.json
+- [ ] Create types.ts with all interfaces + Zod schemas
+- [ ] Create config.ts with env loading
+- [ ] Build data-loader.ts (parse all 3 CSVs)
+- [ ] Create .env.example
+- [ ] Replace main.py with main.ts, update AGENTS.md
+- [ ] **Verify**: all 3 CSV files load and parse correctly
+
+### Phase 2 — Image Processing & Claim Parsing ⏱️ 30 min
+- [ ] Build image-processor.ts (load, resize, base64)
+- [ ] Build claim-parser.ts (extract claims from conversations)
+- [ ] Build evidence-checker.ts (match requirements)
+- [ ] **Verify**: images load, claims parse, requirements match
+
+### Phase 3 — VLM Integration ⏱️ 1 hr
+- [ ] Build prompts.ts (system prompt, per-claim prompt)
+- [ ] Build retry.ts (exponential backoff, jitter, rate-limit handling)
+- [ ] Build vlm-analyzer.ts (OpenAI GPT-4o vision calls)
+- [ ] Test on 2–3 sample claims
+- [ ] **Verify**: VLM returns valid structured output
+
+### Phase 4 — Risk Flagging & Output Assembly ⏱️ 30 min
+- [ ] Build risk-flagger.ts (merge VLM + user history risks)
+- [ ] Build output-writer.ts (CSV with exact schema)
+- [ ] Build logger.ts (structured logging + cost tracking)
+- [ ] **Verify**: output matches expected CSV format
+
+### Phase 5 — Pipeline Integration & Sample Run ⏱️ 30 min
+- [ ] Wire all modules in index.ts
+- [ ] Run full pipeline on sample_claims.csv
+- [ ] Compare against expected outputs
+- [ ] Fix systematic errors
+- [ ] **Verify**: ≥85% claim_status accuracy on sample
+
+### Phase 6 — Evaluation Framework ⏱️ 30 min
+- [ ] Build evaluation/evaluate.ts + metrics.ts
+- [ ] Compare at least 2 prompt strategies
+- [ ] Generate evaluation_report.md
+- [ ] **Verify**: metrics computed, report generated
+
+### Phase 7 — Test Run & Polish ⏱️ 30 min
+- [ ] Run pipeline on claims.csv → output.csv
+- [ ] Verify: 45 rows, all columns, correct format
+- [ ] Add batching/concurrency optimizations
+- [ ] Write README, finalize docs
+
+### Phase 8 — Submission Prep ⏱️ 15 min
+- [ ] Final output.csv validation
+- [ ] Package code.zip (exclude node_modules, .env)
+- [ ] Verify chat transcript log
+
+---
+
+## Rate Limit & Error Handling Strategy
+
+| Concern | Strategy |
+|---|---|
+| **Rate limits (429)** | Exponential backoff starting at 1s, max 60s, with random jitter |
+| **Concurrency** | `p-limit` with max 3 concurrent API calls |
+| **Timeouts** | 60s per VLM call, 3 retries max |
+| **Token limits** | Image resizing to ≤1024px, compress to ≤200KB |
+| **Transient errors (5xx)** | Retry up to 3 times with backoff |
+| **Invalid VLM output** | Zod validation → retry with stricter prompt |
+| **Corrupt images** | Graceful skip, flag as `valid_image=false` |
+| **Cost control** | Track tokens per call, log cumulative cost |
+
+---
+
+## Verification Plan
+
+### Key Metrics Targets (on sample_claims.csv)
+| Metric | Target |
+|---|---|
+| `claim_status` accuracy | ≥ 85% (17/20) |
+| `issue_type` accuracy | ≥ 80% (16/20) |
+| `object_part` accuracy | ≥ 80% (16/20) |
+| `evidence_standard_met` accuracy | ≥ 90% (18/20) |
+| `severity` accuracy | ≥ 75% (15/20) |
+| Output schema validity | 100% |
+| Row count match | 100% |
+
+### Cost Estimate
+- ~65 total claims (20 sample + 45 test)
+- ~2 images avg per claim = ~130 image API calls
+- GPT-4o: ~$3–6 total
+- GPT-4o-mini: ~$0.50–1.50 total
