@@ -132,9 +132,9 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 | `[x]` | `types.ts` | Interfaces + Zod schemas |
 | `[x]` | `config.ts` | Env vars, API config, retry settings |
 | `[x]` | `data-loader.ts` | CSV parsers for all 3 input files |
-| `[ ]` | `claim-parser.ts` | Conversation → structured claim extraction |
-| `[ ]` | `image-processor.ts` | Load, resize, base64 encode images |
-| `[ ]` | `evidence-checker.ts` | Evidence requirement matching |
+| `[x]` | `claim-parser.ts` | Conversation → structured claim extraction |
+| `[x]` | `image-processor.ts` | Load, resize, base64 encode images |
+| `[x]` | `evidence-checker.ts` | Evidence requirement matching |
 | `[ ]` | `vlm-analyzer.ts` | OpenAI GPT-4o vision API calls |
 | `[ ]` | `prompts.ts` | All VLM prompts + anti-injection rules |
 | `[ ]` | `risk-flagger.ts` | Risk flag merging + deterministic rules |
@@ -172,11 +172,11 @@ Build a TypeScript system that verifies damage claims (car, laptop, package) by 
 - [x] Replace main.py with main.ts, update AGENTS.md
 - [x] **Verified**: 20 sample claims, 44 test claims, 47 user histories, 11 evidence requirements
 
-### Phase 2 — Image Processing & Claim Parsing ⏱️ 30 min
-- [ ] Build image-processor.ts (load, resize, base64)
-- [ ] Build claim-parser.ts (extract claims from conversations)
-- [ ] Build evidence-checker.ts (match requirements)
-- [ ] **Verify**: images load, claims parse, requirements match
+### Phase 2 — Image Processing & Claim Parsing ✅ COMPLETE
+- [x] Build image-processor.ts (load, resize via sharp, base64 encode, graceful failure)
+- [x] Build claim-parser.ts (adversarial detection, multilingual, multi-part claims)
+- [x] Build evidence-checker.ts (issue family mapping, requirement matching, dedup)
+- [x] **Verified**: images process (52KB→83KB), claims parse (4/4 tests), evidence requirements match correctly
 
 ### Phase 3 — VLM Integration ⏱️ 1 hr
 - [ ] Build prompts.ts (system prompt, per-claim prompt)
